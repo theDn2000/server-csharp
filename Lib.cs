@@ -2,6 +2,106 @@ using SpacetimeDB;
 
 public static partial class Module
 {
+    [Table(Name = "account", Public = true)] // Persistent table to store accounts, public so clients can access it
+    public partial struct Account
+    {
+        [PrimaryKey]
+        public Identity identity; // SpacetimeDB unique authentication identity
+        [Unique, AutoInc]
+        public uint account_id;
+        public string username;
+        public string email;
+
+        // Additional fields can be added as needed
+    }
+
+    [Table(Name = "session", Public = true)] // Non-persistent table to store sessions, public so clients can access it
+    public partial struct Session
+    {
+        [PrimaryKey]
+        public Identity identity; // SpacetimeDB unique authentication identity
+        public uint account_id; // Foreign key to the account table
+        public DateTimeOffset last_active; // Last time the session was active
+        public string current_zone; // Current zone the player is in
+
+        // Additional fields can be added as needed
+    }
+
+
+
+    [Reducer]
+    public static void Login(ReducerContext ctx)
+    {
+        var acc = ctx.Db.account.identity.Find(ctx.Sender);
+        if (acc == null)
+        {
+            throw new Exception("Account not found");
+        }
+
+        if (ctx.Db.session.identity.Find(ctx.Sender) != null)
+        {
+            throw new Exception("Session already exists");
+        }
+
+        ctx.Db.session.Insert(new Session
+        {
+            identity = ctx.Sender,
+            account_id = acc.account_id,
+            last_active = Time.Now,
+            current_zone = "default_zone" // Default zone, can be changed later
+        });
+
+        Log.Info($"User {acc.username} logged in");
+    }
+
+    [Reducer]
+    public static void Logout(ReducerContext ctx)
+    {
+        var session = ctx.Db.session.identity.Find(ctx.Sender);
+        if (session == null)
+        {
+            throw new Exception("Session not found");
+        }
+        
+        ctx.Db.session.identity.Delete(session.identity);
+
+        Log.Info($"User {session.identity} logged out");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+
     [Table(Name = "spawn_npc_timer", Scheduled = nameof(SpawnNpc), ScheduledAt = nameof(scheduled_at))] // Table to schedule an event. This is useful to call a Reducer with a "periodical timer" 
     public partial struct SpawnNpcTimer
     {
@@ -24,10 +124,31 @@ public static partial class Module
     // Define a type (struct) for a vector2
     // This is used to store 2D coordinates in the database
     [SpacetimeDB.Type]
-    public partial struct DbVector2(float x, float y)
+    public partial struct DbVector2
     {
-        public float x = x;
-        public float y = y;
+        public float x;
+        public float y;
+
+        public DbVector2(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        // Calcula la magnitud (longitud) del vector
+        public float Magnitude()
+        {
+            return MathF.Sqrt(x * x + y * y);
+        }
+
+        // Devuelve el vector normalizado (misma dirección, longitud 1)
+        public DbVector2 Normalized()
+        {
+            float mag = Magnitude();
+            if (mag == 0)
+                return new DbVector2(0, 0);
+            return new DbVector2(x / mag, y / mag);
+        }
     }
 
     // The entity represents an object in the game world
@@ -153,7 +274,7 @@ public static partial class Module
     public static void Disconnect(ReducerContext ctx)
     {
         var player = ctx.Db.player.identity.Find(ctx.Sender) ?? throw new Exception("Player not found"); // The player disconnected but does not exist => ERROR
-                                                                                                         // Remove all circles form arena
+                                                                                                         // Remove all characters form arena
         foreach (var character in ctx.Db.character.player_id.Filter(player.player_id)) // Check all the characters controlled by a single player (in a future, each player should only control 1 character)
         {
             var entity = ctx.Db.entity.entity_id.Find(character.entity_id) ?? throw new Exception("Could not find entity ingame related to any of the characters of the player");
@@ -173,17 +294,17 @@ public static partial class Module
         var player = ctx.Db.player.identity.Find(ctx.Sender) ?? throw new Exception("Player not found"); // The player wants to join a game but it is not connected => ERROR
         player.name = name;
         ctx.Db.player.identity.Update(player);
-        SpawnPlayerInitialCircle(ctx, player.player_id);
+        SpawnPlayerInitialCharacter(ctx, player.player_id);
     }
 
-    public static Entity SpawnPlayerInitialCircle(ReducerContext ctx, uint player_id)
+    public static Entity SpawnPlayerInitialCharacter(ReducerContext ctx, uint player_id)
     {
         var rng = ctx.Rng;
         var world_size = (ctx.Db.config.id.Find(0) ?? throw new Exception("Config not found")).world_size;
         var player_start_radius = MassToRadius(15);
         var x = rng.Range(player_start_radius, world_size - player_start_radius);
         var y = rng.Range(player_start_radius, world_size - player_start_radius);
-        return SpawnCircleAt(
+        return SpawnCharacterAt(
             ctx,
             player_id,
             15,
@@ -192,7 +313,21 @@ public static partial class Module
         );
     }
 
-    public static Entity SpawnCircleAt(ReducerContext ctx, uint player_id, uint life, DbVector2 position, DateTimeOffset timestamp)
+    [Reducer]
+    public static void UpdatePlayerInput(ReducerContext ctx, DbVector2 direction)
+    {
+        var player = ctx.Db.player.identity.Find(ctx.Sender) ?? throw new Exception("Player not found");				
+        foreach (var c in ctx.Db.character.player_id.Filter(player.player_id))
+        {
+            var character = c;
+            character.direction = direction.Normalized();
+            character.speed = Math.Clamp(direction.Magnitude(), 0f, 1f);
+            ctx.Db.character.entity_id.Update(character);
+        }
+        
+    }
+
+    public static Entity SpawnCharacterAt(ReducerContext ctx, uint player_id, uint life, DbVector2 position, DateTimeOffset timestamp)
     {
         var entity = ctx.Db.entity.Insert(new Entity
         {
@@ -209,5 +344,6 @@ public static partial class Module
         });
         return entity;
     }
+    */
 }
 
