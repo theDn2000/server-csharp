@@ -10,7 +10,7 @@ namespace StdModule.Accounts
         [Unique, AutoInc]
         public uint account_id;
         public string username;
-        public string email;
+        public ulong created_at; // Unix timestamp of account creation
 
         // Additional fields can be added as needed
     }

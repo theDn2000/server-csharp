@@ -46,5 +46,45 @@ namespace StdModule.Accounts
 
             Log.Info($"User {session.identity} logged out");
         }
+
+        [Reducer]
+        public static void Register(ReducerContext ctx, string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                throw new Exception("Username cannot be empty");
+            }
+
+            if (ctx.Db.account.identity.Find(ctx.Sender) != null)
+            {
+                throw new Exception("Account already exists");
+            }
+
+            ctx.Db.account.Insert(new Account
+            {
+                identity = ctx.Sender,
+                username = username, // The name cdoes not need to be unique, as the identity is unique
+                created_at = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            });
+
+            Log.Info($"User {username} registered");
+        }
+
+        [Reducer]
+        public static void DeleteAccount(ReducerContext ctx)
+        {
+            var acc = ctx.Db.account.identity.Find(ctx.Sender);
+            if (acc == null)
+            {
+                throw new Exception("Account not found");
+            }
+
+            var account = acc.Value; // [CHECK] it should not be necessary to unpack here, but the code does not compile without it
+
+            ctx.Db.account.identity.Delete(account.identity);
+            ctx.Db.session.identity.Delete(account.identity); // Delete the session as well
+
+            Log.Info($"User {account.username} deleted their account");
+        }
     }
 }
