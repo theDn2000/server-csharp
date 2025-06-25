@@ -1,5 +1,16 @@
 using SpacetimeDB;
+using System;
 
+// Import all necessary namespaces for the module
+using StdModule.Accounts;
+//...
+
+
+
+public static partial class Module { }
+
+
+    /*
 public static partial class Module
 {
     [Table(Name = "account", Public = true)] // Persistent table to store accounts, public so clients can access it
@@ -62,7 +73,7 @@ public static partial class Module
         {
             throw new Exception("Session not found");
         }
-        
+
         ctx.Db.session.identity.Delete(session.identity);
 
         Log.Info($"User {session.identity} logged out");
@@ -345,5 +356,5 @@ public static partial class Module
         return entity;
     }
     */
-}
+
 
