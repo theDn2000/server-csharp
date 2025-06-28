@@ -12,6 +12,8 @@ namespace StdModule.Accounts
         public string username;
         public ulong created_at; // Unix timestamp of account creation
 
+        public uint number_of_characters; // Number of characters created by this account
+
         // Additional fields can be added as needed
     }
 }

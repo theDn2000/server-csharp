@@ -10,6 +10,7 @@ namespace StdModule.Characters
 
         [SpacetimeDB.Index.BTree]
         public uint account_id; // Foreign key to the account this character belongs to
+
         [SpacetimeDB.Index.BTree]
         public uint entity_id; // Foreign key to the entity this character represents, could be 0 if the entity is not yet created
 
@@ -18,7 +19,14 @@ namespace StdModule.Characters
         public ulong created_at; // Timestamp when the character was created
 
         public string class_name; // Class of the character (e.g., Warrior, Mage)
+        public string race;
         public uint level; // Level of the character
         public uint experience; // Experience points of the character
+
+        // Stats
+        public uint strength; // Strength stat
+        public uint intelligence; // Intelligence stat
+        public uint agility; // Agility stat
+        public uint endurance; // Endurance stat
     }
 }

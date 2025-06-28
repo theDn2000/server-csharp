@@ -8,7 +8,11 @@ namespace StdModule.Accounts
         [PrimaryKey]
         public Identity identity; // SpacetimeDB unique authentication identity
         public uint account_id; // Foreign key to the account table
-        public ulong last_active; // Last time the session was active
+
+        [SpacetimeDB.Index.BTree]
+        public uint character_id; // Foreign key to the character table, could be 0 if no character is selected
+
+        public ulong last_active; // Last time the session was active (updated at disconnect)
         public string current_zone; // Current zone the player is in
 
     // Additional fields can be added as needed

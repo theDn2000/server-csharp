@@ -2,7 +2,7 @@ using SpacetimeDB;
 
 namespace StdModule.Accounts
 {
-    public partial class AccountsReducers
+    public partial class AccountReducers
     {
         [Reducer]
         public static void Login(ReducerContext ctx) // [CHECK] We have to handle the registration and make it compatible with the login reducer
@@ -24,6 +24,7 @@ namespace StdModule.Accounts
             {
                 identity = ctx.Sender,
                 account_id = account.account_id,
+                character_id = 0, // No character selected at login
                 last_active = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 current_zone = "default_zone" // Default zone, can be changed later
             });
@@ -42,9 +43,15 @@ namespace StdModule.Accounts
 
             var session = ses.Value; // [CHECK] it should not be necessary to unpack here, but the code does not compile without it
 
+            var username = ctx.Db.account.account_id.Find(session.account_id)?.username;
+            if (username == null)
+            {
+                throw new Exception("Account not found");
+            }
+
             ctx.Db.session.identity.Delete(session.identity);
 
-            Log.Info($"User {session.identity} logged out");
+            Log.Info($"User {username} logged out");
         }
 
         [Reducer]
