@@ -6,10 +6,11 @@ namespace StdModule.Accounts
     public partial struct Account
     {
         [PrimaryKey]
-        public Identity identity; // SpacetimeDB unique authentication identity
+        public string username;
+        public string password_hash; // Hashed password for security
         [Unique, AutoInc]
         public uint account_id;
-        public string username;
+        
         public ulong created_at; // Unix timestamp of account creation
 
         public uint number_of_characters; // Number of characters created by this account

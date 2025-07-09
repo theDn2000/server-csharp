@@ -24,12 +24,19 @@ namespace StdModule.Characters
             }
 
             // Check if the account has reached the maximum number of characters
-            var account = ctx.Db.account.identity.Find(ctx.Sender);
+            var session = ctx.Db.session.identity.Find(ctx.Sender);
+            if (session == null)
+            {
+                throw new Exception("Session not found");
+            }
+
+            // Obtain the account information from the session
+            var account = ctx.Db.account.account_id.Find(session.Value.account_id);
             if (account == null)
             {
                 throw new Exception("Account not found");
             }
-            if (account.Value.number_of_characters >= 5) // Assuming a max of 5 characters per account
+            if (account.Value.number_of_characters >= 5) // [CHECK] Assuming a max of 5 characters per account
             {
                 throw new Exception("Maximum number of characters reached for this account (5)");
             }
@@ -70,13 +77,21 @@ namespace StdModule.Characters
                 throw new Exception("Character ID cannot be 0");
             }
 
-            // Obtain the account and character information
-            var account = ctx.Db.account.identity.Find(ctx.Sender);
+            // Obtain the session information
+            var session = ctx.Db.session.identity.Find(ctx.Sender);
+            if (session == null)
+            {
+                throw new Exception("Session not found");
+            }
+
+            // Get the account information from the session
+            var account = ctx.Db.account.account_id.Find(session.Value.account_id);
             if (account == null)
             {
                 throw new Exception("Account not found");
             }
 
+            // Get the character information
             var character = ctx.Db.character.character_id.Find(character_id);
             if (character == null)
             {
@@ -106,13 +121,21 @@ namespace StdModule.Characters
                 throw new Exception("Character ID cannot be 0");
             }
 
+            // Obtain the session information
+            var session = ctx.Db.session.identity.Find(ctx.Sender);
+            if (session == null)
+            {
+                throw new Exception("Session not found");
+            }
+
             // Obtain the account and character information
-            var account = ctx.Db.account.identity.Find(ctx.Sender);
+            var account = ctx.Db.account.account_id.Find(session.Value.account_id);
             if (account == null)
             {
                 throw new Exception("Account not found");
             }
 
+            // Get the character information
             var character = ctx.Db.character.character_id.Find(character_id);
             if (character == null)
             {
@@ -123,13 +146,6 @@ namespace StdModule.Characters
             if (character.Value.account_id != account.Value.account_id)
             {
                 throw new Exception("Character does not belong to this account");
-            }
-
-            // Obtain the session information
-            var session = ctx.Db.session.identity.Find(ctx.Sender);
-            if (session == null)
-            {
-                throw new Exception("Session not found");
             }
 
             // Update the session in the database
