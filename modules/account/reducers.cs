@@ -130,27 +130,20 @@ namespace StdModule.Accounts
             var session = ses.Value; // [CHECK] it should not be necessary to unpack here, but the code does not compile without it
 
             var account = ctx.Db.account.account_id.Find(session.account_id);
+
             if (account == null)
             {
                 throw new Exception("Account not found");
             }
 
             // 1. Delete all the characters associated with the account
-            foreach (var character in ctx.Db.character.Where(c => c.account_id == account.id))
+            foreach (var character in ctx.Db.character.account_id.Filter(account.Value.account_id))
             {
-                // 2. Delete the Entity associated with the Character, if it exists
-                if (character.entity_id is uint entityId)
-                {
-                    var entity = ctx.Db.entity.FirstOrDefault(e => e.id == entityId);
-                    if (entity is not null)
-                    ctx.Db.entity.Delete(entity);
-                }
-                // 3. Delete the Character itself
                 ctx.Db.character.Delete(character);
             }
 
             // 4. Delete all sessions associated with the account
-            foreach (var s in ctx.Db.session.Where(s => s.account_id == account.id))
+            foreach (var s in ctx.Db.session.account_id.Filter(account.Value.account_id))
             {
                 ctx.Db.session.Delete(s);
             }
@@ -158,7 +151,7 @@ namespace StdModule.Accounts
             // 5. Finally, delete the account itself
             ctx.Db.account.Delete(account.Value);
 
-            Log.Info($"User {account.Value.username} deleted its account");
+            Log.Info($"User {account.Value.username} deleted his/her account");
         }
     }
 }
