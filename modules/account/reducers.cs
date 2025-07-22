@@ -1,9 +1,17 @@
 using SpacetimeDB;
+using StdModule.Globals;
 
 namespace StdModule.Accounts
 {
     public partial class AccountReducers
     {
+        // Initial reducer to handle the connection
+        [Reducer(ReducerKind.ClientConnected)]
+        public static void Connect(ReducerContext ctx)
+        {
+            Log.Info($"{ctx.Sender} just connected.");
+        }
+        
         [Reducer]
         public static void Login(ReducerContext ctx, string username, string password_hash) // When the login is called, a new session is created
         {
@@ -16,7 +24,17 @@ namespace StdModule.Accounts
             var acc = ctx.Db.account.username.Find(username);
             if (acc == null)
             {
+                // Add a message to the userNotification table to inform the user that the account was not found
+                ctx.Db.userNotification.Insert(new UserNotification // [CHECK] Maybe it is necessary to create a specific reducer for this
+                {
+                    identity = ctx.Sender,
+                    message = "SERVER: Account not found",
+                    timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                });
+
+                // Log the error
                 throw new Exception("Account not found");
+
             }
 
             // Check if the password matches
@@ -25,54 +43,53 @@ namespace StdModule.Accounts
                 throw new Exception("Invalid password");
             }
 
-            // If all is good, create a new session
-            if (ctx.Db.session.identity.Find(ctx.Sender) != null)
+            // If all is good, create a new session [CHECK] la cosa es que no se pueda crear una sesion si ya existe una con el mismo account_id, ya que eso significa que el usuario ya esta logueado
+            if (ctx.Db.session.identity.Find(ctx.Sender) != null )
             {
                 throw new Exception("Session already exists");
             }
 
-            var account = acc.Value;
-
-            ctx.Db.session.Insert(new Session
+            // If there is a session with the same account_id, it means the user is already logged in another device, therefore update the session
+            var existingSession = ctx.Db.session.account_id.Find(acc.Value.account_id);
+            Log.Info($"Existing session last_active: {existingSession}");
+            if (existingSession != null) // Discard the dummie session with identity 0 
             {
-                identity = ctx.Sender,
-                account_id = account.account_id,
-                character_id = 0, // No character selected at login
-                last_active = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                current_zone = "default_zone" // Default zone, can be changed later
-            });
+                // LOG
+                Log.Warn($"User {existingSession} is already logged in from another device, updating session");
+                // Update the existing session with the new identity and reset the character_id
+                ctx.Db.session.identity.Delete(existingSession.Value.identity); // [CHECK] Optimizable
 
-            Log.Info($"User {account.username} logged in");
-        }
-        /*
-        [Reducer]
-        public static void Login(ReducerContext ctx) // [CHECK] We have to handle the registration and make it compatible with the login reducer
-        {
-            var acc = ctx.Db.account.identity.Find(ctx.Sender);
-            if (acc == null)
-            {
-                throw new Exception("Account not found");
+                // Inserta la nueva sesión
+                ctx.Db.session.Insert(new Session
+                {
+                    identity = ctx.Sender,
+                    account_id = acc.Value.account_id,
+                    character_id = 0,
+                    last_active = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    current_zone = "default_zone"
+                });
+
+                Log.Info($"User {acc.Value.username} logged in from another device, session updated");
             }
 
-            if (ctx.Db.session.identity.Find(ctx.Sender) != null)
+            // If there is no session with the same account_id, create a new session
+            else
             {
-                throw new Exception("Session already exists");
-            }
+                ctx.Db.session.Insert(new Session
+                {
+                    identity = ctx.Sender,
+                    account_id = acc.Value.account_id,
+                    character_id = 0, // No character selected at login
+                    last_active = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    current_zone = "default_zone" // Default zone, can be changed later
 
-            var account = acc.Value; // [CHECK] it should not be necessary to unpack here, but the code does not compile without it
 
-            ctx.Db.session.Insert(new Session
-            {
-                identity = ctx.Sender,
-                account_id = account.account_id,
-                character_id = 0, // No character selected at login
-                last_active = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                current_zone = "default_zone" // Default zone, can be changed later
-            });
+                });
 
-            Log.Info($"User {account.username} logged in");
+                Log.Info($"User {acc.Value.username} logged in");
+            } 
         }
-        */
+
         [Reducer]
         public static void Logout(ReducerContext ctx)
         {
@@ -142,11 +159,8 @@ namespace StdModule.Accounts
                 ctx.Db.character.Delete(character);
             }
 
-            // 4. Delete all sessions associated with the account
-            foreach (var s in ctx.Db.session.account_id.Filter(account.Value.account_id))
-            {
-                ctx.Db.session.Delete(s);
-            }
+            // 4. Delete the session associated with the account
+            ctx.Db.session.identity.Delete(session.identity);
 
             // 5. Finally, delete the account itself
             ctx.Db.account.Delete(account.Value);

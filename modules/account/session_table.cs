@@ -8,7 +8,7 @@ namespace StdModule.Accounts
         [PrimaryKey]
         public Identity identity; // SpacetimeDB unique authentication identity
 
-        [SpacetimeDB.Index.BTree] // Not unique, as multiple sessions can exist for the same account
+        [Unique] // Not unique, as multiple sessions can exist for the same account
         public uint account_id; // Foreign key to the account table
 
         [SpacetimeDB.Index.BTree] // Not unique, as multiple sessions can exist for the same character
