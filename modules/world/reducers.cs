@@ -24,8 +24,8 @@ namespace StdModule.World
                 pos_z = 0.0f,
                 rot_y = 0.0f, // Default rotation
 
-                health = 100, // Default health
-                mana = 100, // Default mana
+                //health = 100, // Default health
+                //mana = 100, // Default mana
 
                 entity_type = entity_type,
                 created_at = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),

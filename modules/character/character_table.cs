@@ -14,6 +14,9 @@ namespace StdModule.Characters
         [SpacetimeDB.Index.BTree]
         public uint entity_id; // Foreign key to the entity this character represents, could be 0 if the entity is not yet created
 
+        [SpacetimeDB.Index.BTree]
+        public string username; // Username of the account that owns this character, used by the client to search for characters
+
         [Unique]
         public string name; // Unique name for the character
         public ulong created_at; // Timestamp when the character was created

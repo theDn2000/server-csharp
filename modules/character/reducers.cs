@@ -46,6 +46,7 @@ namespace StdModule.Characters
             {
                 account_id = account.Value.account_id, // Use the account ID from the account table
                 entity_id = 0, // Initially no entity is created, can be updated later
+                username = account.Value.username, // Use the username from the account table
 
                 name = name,
                 created_at = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -62,7 +63,7 @@ namespace StdModule.Characters
             };
 
             ctx.Db.character.Insert(character);
-            Log.Info($"Character {character.name}, level {character.level} {character.race} {character.class_name} created successfully");
+            Log.Info($"Character {character.name}, level {character.level} {character.race} {character.class_name} from {character.username} created successfully");
         }
 
 

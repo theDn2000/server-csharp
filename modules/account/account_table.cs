@@ -2,7 +2,7 @@ using SpacetimeDB;
 
 namespace StdModule.Accounts
 {
-    [Table(Name = "account", Public = true)] // Persistent table to store accounts, public so clients can access it
+    [Table(Name = "account")] // Persistent table to store accounts
     public partial struct Account
     {
         [PrimaryKey]

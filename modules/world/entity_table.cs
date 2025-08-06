@@ -15,8 +15,8 @@ namespace StdModule.World
         public float rot_y; // Y rotation of the entity (yaw), used for orientation in the world
 
         // Health and status
-        public uint health; // Current health of the entity
-        public uint mana; // Current mana of the entity
+        //public uint health; // Current health of the entity
+        //public uint mana; // Current mana of the entity
 
         // Utils
         public string entity_type; // Type of the entity (e.g., "character", "npc", "item")
