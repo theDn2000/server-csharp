@@ -16,6 +16,13 @@ namespace StdModule.World
                 throw new Exception("Entity type cannot be empty");
             }
 
+            // Check that the session is valid
+            var session = ctx.Db.session.identity.Find(ctx.Sender);
+            if (session == null)
+            {
+                throw new Exception("Session does not exist");
+            }
+
             // Create a new entity
             var entity = new Entity
             {
