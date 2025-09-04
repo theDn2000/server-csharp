@@ -31,5 +31,10 @@ namespace StdModule.Characters
         public uint intelligence; // Intelligence stat
         public uint agility; // Agility stat
         public uint endurance; // Endurance stat
+
+        // Last known position in the world (can be updated when the character logs out)
+        public float last_pos_x;
+        public float last_pos_y;
+        public float last_pos_z;
     }
 }

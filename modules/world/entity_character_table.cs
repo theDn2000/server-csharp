@@ -7,7 +7,7 @@ namespace StdModule.World
     public partial struct EntityCharacter
     {
         [PrimaryKey, AutoInc]
-        public int entity_id; // Unique identifier for the entity, same as in entity_table
+        public uint entity_id; // Unique identifier for the entity, same as in entity_table
 
         [SpacetimeDB.Index.BTree]
         public uint character_id; // Foreign key to the character this entity represents
@@ -16,6 +16,6 @@ namespace StdModule.World
         public string name;
         public uint level; // Level of the character entity
         public string class_name; // Class of the character entity (e.g., Warrior, Mage)
-        public uint race; // Race of the character entity (e.g., Human, Orc)
+        public string race; // Race of the character entity (e.g., Human, Orc)
     }
 }

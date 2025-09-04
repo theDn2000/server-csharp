@@ -93,18 +93,30 @@ namespace StdModule.Accounts
         [Reducer]
         public static void Logout(ReducerContext ctx)
         {
+            // Check if the session exists
             var ses = ctx.Db.session.identity.Find(ctx.Sender);
             if (ses == null)
             {
                 throw new Exception("Session not found");
             }
 
-            var session = ses.Value; // [CHECK] it should not be necessary to unpack here, but the code does not compile without it
+            var session = ses.Value;
 
+            // Get the username of the session owner
             var username = ctx.Db.account.account_id.Find(session.account_id)?.username;
             if (username == null)
             {
                 throw new Exception("Account not found");
+            }
+
+            // Check if there is an entity in the world associated with the character, and delete it if exists
+            if (session.character_id > 0)
+            {
+                foreach (var entity in ctx.Db.entity_character.character_id.Filter(session.character_id))
+                {
+                    ctx.Db.entity_character.Delete(entity);
+                    Log.Info($"EntityCharacter deleted: entity_id={entity.entity_id}, character_id={entity.character_id}");
+                }
             }
 
             ctx.Db.session.identity.Delete(session.identity);

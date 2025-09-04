@@ -6,7 +6,7 @@ namespace StdModule.World
     public partial struct Entity
     {
         [PrimaryKey, AutoInc]
-        public int entity_id; // Unique identifier for the entity, extensions can use this to reference the entity
+        public uint entity_id; // Unique identifier for the entity, extensions can use this to reference the entity
 
         // Position and rotation in the world
         public float pos_x; // X position of the entity in the world

@@ -36,10 +36,20 @@ namespace StdModule.Characters
             {
                 throw new Exception("Account not found");
             }
-            if (account.Value.number_of_characters >= 5) // [CHECK] Assuming a max of 5 characters per account
+            if (account.Value.number_of_characters >= 10) // [CHECK] Assuming a max of 10 characters per account
             {
-                throw new Exception("Maximum number of characters reached for this account (5)");
+                throw new Exception("Maximum number of characters reached for this account (10)");
             }
+
+            if (race != "Human" && race != "Orc")
+            {
+                throw new Exception("Invalid race");
+            }
+
+            // Increment the number of characters for the account
+            var updatedAccount = account.Value;
+            updatedAccount.number_of_characters++;
+            ctx.Db.account.account_id.Update(updatedAccount);
 
             // Create a new character
             var character = new Character
@@ -60,6 +70,10 @@ namespace StdModule.Characters
                 intelligence = 0,
                 agility = 0,
                 endurance = 0,
+
+                last_pos_x = 0.0f, // Default position
+                last_pos_y = 0.0f,
+                last_pos_z = 0.0f,
             };
 
             ctx.Db.character.Insert(character);
